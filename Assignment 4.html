@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title>Temperature Changes in U.S. Counties</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.js'></script>
+    
+
+  <style>
+        body { margin:0; padding:0; }
+     #map { position:absolute; top:0; bottom:0; width:100%; }
+        
+     #banner { z-index: 9999; 
+         background-color:whitesmoke; 
+         opacity: 70%; 
+         text-align: center }
+
+  </style>
+</head>
+
+<body>
+  <div id='map'></div>
+   
+    <!--  Insert the title div here (part VI) -->
+  <div id='banner'>
+     		<h1>Annual Temperature Changes</h1>
+     		<h2>By: Haley Alferez</h2>
+        
+ 	</div>
+  
+  <script>
+        // Insert the JavaScript within the <script> tags, within the body   
+        // Mapbox access token
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaGFsZmVyZXoiLCJhIjoiY21uaTFxOWJ3MDhjdjJxcHV0enlydnp6cSJ9.CoskwjDtnAWrKo5riK_sTg';
+   
+        //  initialize the map 
+    var map = new mapboxgl.Map({
+     container: 'map', // id of a div on your page, where the map will be inserted
+     style: 'mapbox://styles/halferez/cmogolixo005b01sxcl7rac9e', // stylesheet location
+     center: [-98.35, 39.50], // starting position [lng, lat] eg. [-122.6788, 45.5212]
+     zoom: 3 // starting zoom 
+        });
+        
+        // zoom contols
+    map.addControl(new mapboxgl.NavigationControl({
+      showCompass: false
+        }), 'bottom-left');
+        
+    </script>
+
+  </body>
+
+</html>
