@@ -7,68 +7,85 @@
   <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.css" rel="stylesheet">
+   
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ranchers&display=swap" rel="stylesheet">
-
+   
+    <script src="routes.js"></script>
     <style>
         body { margin:0; padding:0; }
+        
         #map { position:absolute; top:0; bottom:0; width:100%; }
-              /* Overrides the pop-up width slightly bigger min-width than the default Mapbox CSS*/
-            .mapboxgl-popup {
-                    min-width: 325px;
-                 }
-                 .popupImage{
-              width:100%;
-                 }
-            .mapboxgl-popup-tip {
-              display: none;
-                 }
-/*FLY BUTTONS*/
-            .fly {
-                    display: inline-block; /* displays over the map */
-                    position: relative; /* displays over the map */
-                    margin: 0px auto; 
-                    width: 24%;  /* width of parent div */
-                    padding: 10px;
-                    border-style: solid;
-                    border-color: black;
-                    border-radius: 3px; /* rounded corners */
-                    font-size: 1em;
-                    text-align: center;
-                    font-weight: bold;
-                    color: black;
-                    background: green;
-                    cursor:pointer;
-                }
- /*Images*/
-           
-  /*BUTTONS*/
-            .ranchers-regular {
-                    font-family: "Ranchers", sans-serif;
-                    font-weight: 200;
-                    font-style: normal;
-                  }
+        
+        .popupImage { width:100%; }
+         
+        .mapboxgl-popup-tip { display: none; }
+        
+/*SIDEBAR*/
+        #sidebar {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            width: 320px;
+            background: rgba(255,255,255,0.92);
+            border-radius: 8px;
+            padding: 16px;
+            z-index: 999;
+            font-family: "Ranchers", cursive;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        #sidebar h2 { margin: 0 0 8px; }
+        #sidebar img { width: 100%; border-radius: 4px; }
+        #sidebar p { font-size: 0.85em; margin: 8px 0 0; }
+        #sidebar .source { font-size: 0.6em; opacity: 0.6; margin-top: 4px; }
+            
+/*FLY BUTTON*/
+        .fly {
+            display: inline-block; 
+            position: relative; 
+            margin: 0px auto; 
+            width: 35%;  
+            padding: 10px;
+            border-style: solid;
+            border-color: black;
+            border-radius: 3px; 
+            font-size: 1em;
+            text-align: center;
+            font-weight: bold;
+            color: black;
+            background: rgb(92, 143, 44);
+            cursor:pointer;
+        }
 
-                    
-              button {
-                font-family: "Ranchers", cursive;
-                font-weight: 400;
-                font-style: normal;
-                }
+/*BUTTONS*/
+        .ranchers-regular {
+            font-family: "Ranchers", sans-serif;
+            font-weight: 200;
+            font-style: normal;
+        }
 
-            .mapboxgl-popup {
-              min-width: 325px;
-              /*FONT*/
-                font-family: "Ranchers", cursive;
-                font-weight: 200;
-                font-style: normal;
-          } 
-        #banner { z-index: 5000; 
-         font-family: "Ranchers", cursive;
-         background-color:green; 
-         opacity: 80%; 
-         text-align: center }
+        button {
+            font-family: "Ranchers", cursive;
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        .mapboxgl-popup {
+            min-width: 325px;
+            font-family: "Ranchers", cursive;
+            font-weight: 200;
+            font-style: normal;
+        } 
+
+/*TITLE*/
+        #banner { 
+            z-index: 5000; 
+            font-family: "Ranchers", cursive;
+            background-color: rgb(92, 143, 44); 
+            opacity: 80%; 
+            text-align: center;
+        }
         #banner h1 {
             font-size: 1.2em;
             margin: 4px 0;
@@ -82,51 +99,123 @@
   <body>
     <div id='map'></div>
     <div id='banner'> GEOG 492 Final Project
-     		<h1>EPIC&nbsp;&nbsp;&nbsp;END&nbsp;&nbsp;&nbsp;OF&nbsp;&nbsp;&nbsp;YEAR&nbsp;&nbsp;&nbsp;ROAD&nbsp;&nbsp;&nbsp;TRIP</h1>
-     		<h2>By: Haley Alferez</h2>
+        <h1>EPIC&nbsp;&nbsp;&nbsp;END&nbsp;&nbsp;&nbsp;OF&nbsp;&nbsp;&nbsp;YEAR&nbsp;&nbsp;&nbsp;ROAD&nbsp;&nbsp;&nbsp;TRIP</h1>
+        <h2>By: Haley Alferez</h2>
     </div>
-    <button class='fly' id='GLACIERButton'>Jump to Glacier</button>
-    <button class='fly' id='SALTFLATSButton'>Jump to Bonneville Salt Flats</button>
-    <button class='fly' id='YellowstoneButton'>Jump to Yellowstone</button> 
-    <button class='fly' id='ABERTButton'>Jump to Lake Abert</button> 
+    <button class='fly' id='nextBtn'>Next Location ➜</button>
+
+    <div id="sidebar">
+        <h2 id="stop-name"></h2>
+        <img id="stop-image" class="popupImage" />
+        <p id="stop-description"></p>
+        <p id="stop-source" class="source"></p>
+    </div>
+
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoiaGFsZmVyZXoiLCJhIjoiY21uaTFxOWJ3MDhjdjJxcHV0enlydnp6cSJ9.CoskwjDtnAWrKo5riK_sTg';
 
         var map = new mapboxgl.Map({
-          container: 'map',
-          style: 'mapbox://styles/halferez/cmpq06fjj002x01ss6e28181p', 
-          center: [-123.08968, 44.05212], // START
-          zoom: 11 // START ZOOM
-         });
-        
-   //ZOOM CONTROLS
-        map.addControl(new mapboxgl.NavigationControl({
-            showCompass: false
-        }), 'bottom-left');
-    
-   //POP-UPS FOR MARKERS
-          var popup = new mapboxgl.Popup({ offset: 25 })
-            .setHTML('Leaving Eugene!');
-          var popup_layer = new mapboxgl.Popup({ closeOnClick: true, anchor: 'center' }) 
-            .setLngLat([-123.08968, 44.05212]) //popup coordinates
-            .setHTML('<h1>11 hours to Glacier!</h1>') //popup text
-            .addTo(map); //add this popup to the map!
-          var popup_layer_voodoo = new mapboxgl.Popup({
-              closeOnClick: true, anchor: 'top-left'
-            })
-            .setLngLat([-122.6655, 45.5081])
-            .setHTML('<a href="https://omsi.edu/">OMSI</a>')
-            .addTo(map);
+            container: 'map',
+            style: 'mapbox://styles/halferez/cmpq06fjj002x01ss6e28181p',
+            center: [-123.08968, 44.05212],
+            zoom: 11
+        });
 
-   //MARKERS
-          var marker = new mapboxgl.Marker({color: 'green'})
-            .setLngLat([-122.6655, 45.5081])
-            .setPopup(popup) //add the popup with the variable name 'popup' to this marker 
-            .addTo(map); // add the open marker to the map
-          var marker2 = new mapboxgl.Marker({color:'green'})
-          .setLngLat([-122.7080, 45.5187]) // starting position [lng, lat] 
-          .addTo(map);
+        map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-left');
         
+        map.on('style.load', () => {
+            map.addSource('trace', {
+                type: 'geojson',
+                data: {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: targetRoute  
+                    }
+                }
+            });
+            map.addLayer({
+                type: 'line',
+                source: 'trace',
+                id: 'line',
+                paint: {
+                    'line-color': 'green',
+                    'line-width': 4
+                },
+                layout: {
+                    'line-cap': 'round',
+                    'line-join': 'round'
+                }
+            });
+        });
+
+        const stops = [
+            {
+                name: 'Eugene',
+                center: [-123.08968, 44.05212],
+                zoom: 11,
+                image: 'images/Eugene.jpg',
+                description: 'Starting the trip in Eugene! We have 14 days to go to Glacier, Yellowstone, and the Bonneville Salt Flats. Thats over 2295 miles!',
+                source: ''
+            },
+            {
+                name: 'Glacier',
+                center: [-113.8000, 48.7550],
+                zoom: 10,
+                image: 'https://upload.wikimedia.org/wikipedia/commons/5/51/Mountain_Goat_at_Hidden_Lake.jpg',
+                description: '3 days later — made it to Glacier! Time to hike and explore.',
+                source: 'By Robert M. Russell - Own work, CC BY-SA 4.0'
+            },
+            {
+                name: 'Yellowstone',
+                center: [-110.5885, 44.4280],
+                zoom: 10,
+                image: 'images/yellowstone.jpg',
+                description: 'Yellowstone — geysers, bison, and incredible scenery.',
+                source: ''
+            },
+            {
+                name: 'Bonneville Salt Flats',
+                center: [-113.8933, 40.7799],
+                zoom: 11,
+                image: 'images/saltflats.jpg',
+                description: 'The Bonneville Salt Flats — endless white stretching to the horizon.',
+                source: ''
+            },
+            {
+                name: 'Lake Abert',
+                center: [-120.2300, 42.6500],
+                zoom: 11,
+                image: 'images/abert.jpg',
+                description: 'Lake Abert — a vast alkaline lake in the Oregon high desert.',
+                source: ''
+            }
+        ];
+
+        let currentStop = 0;
+
+        function showStop(index, fly = true) {
+            const stop = stops[index];
+
+            if (fly) map.flyTo({ center: stop.center, zoom: stop.zoom, duration: 2500 });
+
+            setTimeout(() => {
+                document.getElementById('stop-name').textContent = stop.name;
+                document.getElementById('stop-image').src = stop.image;
+                document.getElementById('stop-description').textContent = stop.description;
+                document.getElementById('stop-source').textContent = stop.source || '';
+            }, fly ? 2600 : 0);
+
+            const btn = document.getElementById('nextBtn');
+            btn.textContent = index >= stops.length - 1 ? 'Back to Start ↩' : 'Next Location ➜';
+        }
+
+        map.on('load', () => showStop(0, false)); // show Eugene sidebar immediately, no flying
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            currentStop = (currentStop + 1) % stops.length;
+            showStop(currentStop);
+        });
     </script>
   </body>
 </html>
