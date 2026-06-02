@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Animate the camera along a path</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.js"></script>
+<style>
+body { margin: 0; padding: 0; }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+<script src="routes.js"></script>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaGFsZmVyZXoiLCJhIjoiY21uZjZteDA4MDc5dTJxb2x3NHV0bWRsNSJ9.dJCgJZ6u6aCMLIhUL26pjQ';
+    const map = new mapboxgl.Map({
+        container: 'map',
+        zoom: 11.53,
+        center: [-123.08968, 44.05212],
+        pitch: 65,
+        bearing:-180,
+        style: 'mapbox://styles/halferez/cmpq06fjj002x01ss6e28181p', // style URL
+        interactive: false
+    });
+   
+    const cameraRoute = [[-123.0896705, 44.052121],[-122.6783853, 45.515232],[-116.358268, 47.549807], [-113.9886482, 48.5027469],[-110.5612490, 44.5979182],[-113.8352043, 40.7787454],[-123.0896705, 44.052121]];
+
+    map.on('style.load', () => {
+        map.addSource('mapbox-dem', {
+            'type': 'raster-dem',
+            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+            'tileSize': 512,
+            'maxzoom': 14
+        });
+        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+        map.addSource('trace', {
+            type: 'geojson',
+            data: {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': targetRoute
+                }
+            }
+        });
+        
+        map.addLayer({
+            type: 'line',
+            source: 'trace',
+            id: 'line',
+            paint: {
+                'line-color': 'red',
+                'line-width': 10
+            },
+            layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+            }
+        });
+    });
+
+    // wait for the terrain and sky to load before starting animation
+    map.on('load', () => {
+            const animationDuration = 400000;
+            const cameraAltitude =50000;
+            const routeDistance = turf.length(turf.lineString(cameraRoute));
+
+            // Define pause points: phase (0–1) and message
+            const pausePoints = [
+                { phase: 0.15, message: "You're passing through Portland!", triggered: false },
+                { phase: 0.45, message: "Welcome to the Pacific Northwest mountains!", triggered: false }
+            ];
+
+            let isPaused = false;
+            let pausedAt = 0; // track how much time had elapsed when we paused
+
+            function resumeAnimation() {
+                document.getElementById('popup').style.display = 'none';
+                isPaused = false;
+                start = null; // force recalculation using pausedAt offset
+                window.requestAnimationFrame(frame);
+                 }
+                     document.getElementById('resume-btn').addEventListener('click', resumeAnimation);
+                     let start = null;
+            
+            let lastBearing = 0;
+
+            function frame(time) {
+            if (!start) start = time - pausedAt; // resume from where we left off
+            let phase = (time - start) / animationDuration;
+            if (phase > 1) { start = time; pausedAt = 0; phase = 0; }
+
+            for (const pt of pausePoints) {
+                if (!pt.triggered && phase >= pt.phase) {
+                    pt.triggered = true;
+                    isPaused = true;
+                    pausedAt = time - start; // save elapsed ms at pause moment
+                    document.getElementById('popup-text').textContent = pt.message;
+                    document.getElementById('popup').style.display = 'block';
+                    return;
+                }
+            }
+            if (isPaused) return;
+            // ... rest of frame unchanged
+
+                const alongRoute = turf.along(
+                turf.lineString(cameraRoute),
+                routeDistance *phase
+                  ).geometry.coordinates;
+                
+                const lookAheadPhase = Math.min (phase +0.02, 1);
+                const lookAhead = turf.along(
+                    turf.lineString(cameraRoute),
+                    routeDistance*lookAheadPhase
+                ).geometry.coordinates;
+
+                const rawBearing = turf.bearing(
+                    turf.point(alongRoute),
+                    turf.point(lookAhead)
+                );
+
+                let delta = rawBearing - lastBearing;
+                while (delta > 180) delta-= 360;
+                while (delta < -180) delta += 360;
+                const smoothBearing = lastBearing + delta * 0.5;
+                lastBearing = smoothBearing;
+
+                const camera = map.getFreeCameraOptions();
+                const DEG = Math.PI / 180;
+                const offsetDist = 0.02;
+                const camLng = alongRoute[0] - offsetDist * Math.sin(smoothBearing * DEG);
+                const camLat = alongRoute[1] - offsetDist * Math.cos(smoothBearing * DEG);
+
+                camera.position = mapboxgl.MercatorCoordinate.fromLngLat(
+                    { lng: camLng, lat: camLat },
+                    cameraAltitude
+                );
+
+                camera.lookAtPoint({
+                    lng: lookAhead[0],
+                    lat: lookAhead[1]
+                });
+
+                map.setFreeCameraOptions(camera);
+                window.requestAnimationFrame(frame);
+            }
+
+              window.requestAnimationFrame(frame);
+    });
+
+
+</script>
+    <div id="popup" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    background:white; padding:24px; border-radius:8px; max-width:300px; text-align:center; z-index:999; box-shadow:0 4px 20px rgba(0,0,0,0.3)">
+    <p id="popup-text" style="margin:0 0 16px"></p>
+    <button id="resume-btn" style="padding:8px 20px; cursor:pointer">Resume<document.getElementById('resume-btn').addEventListener('click', resumeAnimation);/button>
+    
+</div>
+</body>
+</html>
