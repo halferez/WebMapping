@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset='utf-8' />
+  <title>Haley's Post Grad Road Trip</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ranchers&display=swap" rel="stylesheet">
+
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+              /* Overrides the pop-up width slightly bigger min-width than the default Mapbox CSS*/
+            .mapboxgl-popup {
+                    min-width: 325px;
+                 }
+                 .popupImage{
+              width:100%;
+                 }
+            .mapboxgl-popup-tip {
+              display: none;
+                 }
+/*FLY BUTTONS*/
+            .fly {
+                    display: inline-block; /* displays over the map */
+                    position: relative; /* displays over the map */
+                    margin: 0px auto; 
+                    width: 24%;  /* width of parent div */
+                    padding: 10px;
+                    border-style: solid;
+                    border-color: black;
+                    border-radius: 3px; /* rounded corners */
+                    font-size: 1em;
+                    text-align: center;
+                    font-weight: bold;
+                    color: black;
+                    background: green;
+                    cursor:pointer;
+                }
+ /*Images*/
+           
+  /*BUTTONS*/
+            .ranchers-regular {
+                    font-family: "Ranchers", sans-serif;
+                    font-weight: 200;
+                    font-style: normal;
+                  }
+
+                    
+              button {
+                font-family: "Ranchers", cursive;
+                font-weight: 400;
+                font-style: normal;
+                }
+
+            .mapboxgl-popup {
+              min-width: 325px;
+              /*FONT*/
+                font-family: "Ranchers", cursive;
+                font-weight: 200;
+                font-style: normal;
+          } 
+        #banner { z-index: 5000; 
+         font-family: "Ranchers", cursive;
+         background-color:green; 
+         opacity: 80%; 
+         text-align: center }
+        #banner h1 {
+            font-size: 1.2em;
+            margin: 4px 0;
+        }
+        #banner h2 {
+            font-size: 0.9em;
+            margin: 4px 0;
+        }
+    </style>
+  </head>
+  <body>
+    <div id='map'></div>
+    <div id='banner'> GEOG 492 Final Project
+     		<h1>EPIC&nbsp;&nbsp;&nbsp;END&nbsp;&nbsp;&nbsp;OF&nbsp;&nbsp;&nbsp;YEAR&nbsp;&nbsp;&nbsp;ROAD&nbsp;&nbsp;&nbsp;TRIP</h1>
+     		<h2>By: Haley Alferez</h2>
+    </div>
+    <button class='fly' id='GLACIERButton'>Jump to Glacier</button>
+    <button class='fly' id='SALTFLATSButton'>Jump to Bonneville Salt Flats</button>
+    <button class='fly' id='YellowstoneButton'>Jump to Yellowstone</button> 
+    <button class='fly' id='ABERTButton'>Jump to Lake Abert</button> 
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiaGFsZmVyZXoiLCJhIjoiY21uaTFxOWJ3MDhjdjJxcHV0enlydnp6cSJ9.CoskwjDtnAWrKo5riK_sTg';
+
+        var map = new mapboxgl.Map({
+          container: 'map',
+          style: 'mapbox://styles/halferez/cmpq06fjj002x01ss6e28181p', 
+          center: [-123.08968, 44.05212], // START
+          zoom: 11 // START ZOOM
+         });
+        
+   //ZOOM CONTROLS
+        map.addControl(new mapboxgl.NavigationControl({
+            showCompass: false
+        }), 'bottom-left');
+    
+   //POP-UPS FOR MARKERS
+          var popup = new mapboxgl.Popup({ offset: 25 })
+            .setHTML('Leaving Eugene!');
+          var popup_layer = new mapboxgl.Popup({ closeOnClick: true, anchor: 'center' }) 
+            .setLngLat([-123.08968, 44.05212]) //popup coordinates
+            .setHTML('<h1>11 hours to Glacier!</h1>') //popup text
+            .addTo(map); //add this popup to the map!
+          var popup_layer_voodoo = new mapboxgl.Popup({
+              closeOnClick: true, anchor: 'top-left'
+            })
+            .setLngLat([-122.6655, 45.5081])
+            .setHTML('<a href="https://omsi.edu/">OMSI</a>')
+            .addTo(map);
+
+   //MARKERS
+          var marker = new mapboxgl.Marker({color: 'green'})
+            .setLngLat([-122.6655, 45.5081])
+            .setPopup(popup) //add the popup with the variable name 'popup' to this marker 
+            .addTo(map); // add the open marker to the map
+          var marker2 = new mapboxgl.Marker({color:'green'})
+          .setLngLat([-122.7080, 45.5187]) // starting position [lng, lat] 
+          .addTo(map);
+        
+    </script>
+  </body>
+</html>
