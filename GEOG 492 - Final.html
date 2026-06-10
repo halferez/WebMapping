@@ -28,7 +28,7 @@
             top: 80px;
             right: 50px;
             width: 500px;
-            background: rgb(92, 143, 44);
+            background: rgb(255, 217, 0);
             border-radius: 8px;
             padding: 15px;
             z-index: 999;
@@ -41,18 +41,32 @@
             
 /*FLY BUTTON*/
         .fly {
-            display: inline-block; 
-            position: relative; 
-            margin: 0px auto; 
-            width: 35%;  
-            padding: 10px;
-            border-radius: 3px; 
-            font-size: 1em;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 200px;
+            height: 200px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 1.1em;
             text-align: center;
             font-weight: bold;
             color: black;
-            background: rgb(92, 143, 44);
-            cursor:pointer;
+            background: rgb(255, 217, 0);
+            border: 2px solid #000;
+            box-shadow: 0 0 8px rgba(0,0,0,0.25);
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+            z-index: 5001;
+        }
+
+        .fly:hover {
+            transform: scale(1.1);
+            background: rgb(255, 235, 100);
+            box-shadow: 0 0 12px rgba(0,0,0,0.35);
         }
 
 /*BUTTONS*/
@@ -77,11 +91,17 @@
 
 /*TITLE*/
         #banner { 
-            z-index: 5000; 
+            position: absolute;
+            top: 20px;
+            left: 800px;
+            right: 800px;
+            z-index: 5002;
             font-family: "Ranchers", cursive;
-            background-color: rgb(92, 143, 44); 
-            opacity: 80%; 
+            background-color: rgb(255, 217, 0); 
+            opacity: 1;
             text-align: center;
+            padding: 10px 12px;
+            border-radius: 8px;
         }
         #banner h1 {
             font-size: 1.2em;
@@ -91,6 +111,31 @@
             font-size: 0.9em;
             margin: 4px 0;
         }
+
+        #endPopup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 6000;
+        }
+
+        .endPopupBox {
+            padding: 30px 40px;
+            background: rgb(255, 217, 0);
+            border: 4px solid #000;
+            border-radius: 16px;
+            font-family: "Ranchers", cursive;
+            font-size: 3em;
+            color: black;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        }
     </style>
   </head>
   <body>
@@ -99,7 +144,11 @@
         <h1>EPIC&nbsp;&nbsp;&nbsp;END&nbsp;&nbsp;&nbsp;OF&nbsp;&nbsp;&nbsp;YEAR&nbsp;&nbsp;&nbsp;ROAD&nbsp;&nbsp;&nbsp;TRIP</h1>
         <h2>By: Haley Alferez</h2>
     </div>
-    <button class='fly' id='nextBtn'>Next Location ➜</button>
+    <button class='fly' id='nextBtn'>➜</button>
+
+    <div id="endPopup">
+        <div class="endPopupBox">Back home ready to start the next adventure!</div>
+    </div>
 
     <div id="sidebar">
         <h2 id="stop-name"></h2>
@@ -151,9 +200,9 @@
                 name: 'Eugene',
                 center: [-123.08968, 44.05212],
                 zoom: 11,
-                image: 'Eugene.heic',
+                image: 'images/eugene.heic',
                 description: 'Starting the trip in Eugene! We have 14 days to go to Glacier, Yellowstone, and the Bonneville Salt Flats. Thats over 2295 miles!',
-                source: ''
+                source: 'Trusted Steed'
             },
             {
                 name: 'Glacier',
@@ -169,7 +218,7 @@
                 zoom: 10,
                 image: 'https://jacksonhole-traveler-production.s3.amazonaws.com/wp-content/uploads/2014/11/yellowstone-national-park-5BNS1455.jpg',
                 description: 'After 4 days in Glacier national park we make our way to Yellowstone! We will spend another 3 days here.',
-                source: ''
+                source: 'Jackson Hole Traveler'
             },
             {
                 name: 'Bonneville Salt Flats',
@@ -177,15 +226,15 @@
                 zoom: 11,
                 image: 'https://ctfassets.ksldigital.com/0wjmk6wgfops/17oZGsiEevOkg7tpUeaFG0/67bf9df09bff4cbb4136881fa771b789/AdobeStockSaltFlats.jpeg?w=1920&h=501&fit=fill&f=center&q=70',
                 description: 'After Yellowstone we head to The Bonneville Salt Flats. This will not take up much time and we may check out Salt Lake City while we are in the area.',
-                source: ''
+                source: 'Adobe Stock'
             },
             {
                 name: 'Lake Abert',
                 center: [-120.2300, 42.6500],
                 zoom: 11,
-                image: 'images/abert.jpg',
+                image: 'https://www.oregonlive.com/resizer/v2/http%3A%2F%2Fmedia.oregonlive.com%2Fenvironment_impact%2Fphoto%2Flake-abert-june-2014-b4fb5dc2ef6f09d4.jpeg?auth=c1ec62ad31f5aaf00fbe2e2675bbda8993386597027b4038a19799cc619311a6&width=1280&smart=true&quality=90',
                 description: 'Lake Abert — this is a stop on the long drive home. It should be a good stop for bird watching!',
-                source: ''
+                source: 'Oregon Live'
             }
         ];
 
@@ -194,22 +243,42 @@
         function showStop(index, fly = true) {
             const stop = stops[index];
 
-            if (fly) map.flyTo({ center: stop.center, zoom: stop.zoom, duration: 2500 });
+            if (fly) map.flyTo({ center: stop.center, zoom: stop.zoom, duration: 5000 });
 
             setTimeout(() => {
                 document.getElementById('stop-name').textContent = stop.name;
                 document.getElementById('stop-image').src = stop.image;
                 document.getElementById('stop-description').textContent = stop.description;
                 document.getElementById('stop-source').textContent = stop.source || '';
-            }, fly ? 2600 : 0);
+            }, fly ? 5200 : 0);
 
             const btn = document.getElementById('nextBtn');
-            btn.textContent = index >= stops.length - 1 ? 'Back to Start ↩' : 'Next Location ➜';
+            btn.title = index >= stops.length - 1 ? 'Back to Start' : 'Next Location';
+
+            if (fly && index === 0) {
+                showEndPopup();
+            } else {
+                hideEndPopup();
+            }
+        }
+
+        function showEndPopup() {
+            const popup = document.getElementById('endPopup');
+            popup.style.display = 'flex';
+            popup.onclick = () => { popup.style.display = 'none'; };
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 10000);
+        }
+
+        function hideEndPopup() {
+            document.getElementById('endPopup').style.display = 'none';
         }
 
         map.on('load', () => showStop(0, false)); // show Eugene sidebar immediately, no flying
 
         document.getElementById('nextBtn').addEventListener('click', () => {
+            document.getElementById('banner').style.display = 'none';
             currentStop = (currentStop + 1) % stops.length;
             showStop(currentStop);
         });
