@@ -33,6 +33,7 @@
             padding: 15px;
             z-index: 999;
             font-family: "Ranchers", cursive;
+            display: none; /* hidden until trip starts */
         }
         #sidebar h2 { margin: 0 0 8px; }
         #sidebar img { width: 100%; border-radius: 4px; }
@@ -92,16 +93,34 @@
 /*TITLE*/
         #banner { 
             position: absolute;
-            top: 20px;
-            left: 800px;
-            right: 800px;
-            z-index: 5002;
+            inset: 0; /* full viewport overlay */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 6000;
             font-family: "Ranchers", cursive;
-            background-color: rgb(255, 217, 0); 
-            opacity: 1;
+            background: rgba(0,0,0,0.5);
             text-align: center;
-            padding: 10px 12px;
+            padding: 20px;
+        }
+        .banner-card {
+            background-color: rgb(255, 217, 0);
+            padding: 30px 36px;
+            border-radius: 12px;
+            border: 4px solid #000;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            max-width: 800px;
+            width: 90%;
+        }
+        .start-button {
+            margin-top: 18px;
+            padding: 12px 20px;
+            font-size: 1.1em;
             border-radius: 8px;
+            border: 2px solid #000;
+            background: #1f7a1f;
+            color: #fff;
+            cursor: pointer;
         }
         #banner h1 {
             font-size: 1.2em;
@@ -111,7 +130,7 @@
             font-size: 0.9em;
             margin: 4px 0;
         }
-
+/*END CARD*/
         #endPopup {
             position: absolute;
             top: 0;
@@ -141,11 +160,15 @@
   </head>
   <body>
     <div id='map'></div>
-    <div id='banner'> GEOG 492 Final Project
-        <h1>EPIC&nbsp;&nbsp;&nbsp;END&nbsp;&nbsp;&nbsp;OF&nbsp;&nbsp;&nbsp;YEAR&nbsp;&nbsp;&nbsp;ROAD&nbsp;&nbsp;&nbsp;TRIP</h1>
-        <h2>By: Haley Alferez</h2>
+    <div id='banner'>
+        <div class="banner-card">
+            <div style="font-size:1.4em;">GEOG 492 Final Project</div>
+            <h1>EPIC&nbsp;&nbsp;&nbsp;END&nbsp;&nbsp;&nbsp;OF&nbsp;&nbsp;&nbsp;YEAR&nbsp;&nbsp;&nbsp;ROAD&nbsp;&nbsp;&nbsp;TRIP</h1>
+            <h2>By: Haley Alferez</h2>
+            <button id="startBtn" class="start-button">Start the Trip</button>
+        </div>
     </div>
-    <button class='fly' id='nextBtn'>➙</button>
+    <button class='fly' id='nextBtn'>➜</button>
 
     <div id="endPopup">
         <div class="endPopupBox">Back home ready to start the next adventure!</div>
@@ -194,6 +217,8 @@
                     'line-join': 'round'
                 }
             });
+
+            // removed route fit here; we'll fit to stops after stops are defined
         });
 
         const stops = [
@@ -240,6 +265,7 @@
         ];
 
         let currentStop = 0;
+        let tripStarted = false;
 
         function showStop(index, fly = true) {
             const stop = stops[index];
@@ -255,12 +281,6 @@
 
             const btn = document.getElementById('nextBtn');
             btn.title = index >= stops.length - 1 ? 'Back to Start' : 'Next Location';
-
-            if (fly && index === 0) {
-                showEndPopup();
-            } else {
-                hideEndPopup();
-            }
         }
 
         function showEndPopup() {
@@ -276,12 +296,36 @@
             document.getElementById('endPopup').style.display = 'none';
         }
 
-        map.on('load', () => showStop(0, false)); // show Eugene sidebar immediately, no flying
+        function fitToStops() {
+            try {
+                const coords = stops.map(s => s.center);
+                if (coords.length) {
+                    const bounds = coords.reduce((b, c) => b.extend(c), new mapboxgl.LngLatBounds(coords[0], coords[0]));
+                    map.fitBounds(bounds, { padding: 60 });
+                }
+            } catch (e) {
+                console.warn('Could not fit to stops:', e);
+            }
+        }
+
+        map.on('load', () => { /* show title card first; start button will fly to Eugene */ fitToStops(); });
 
         document.getElementById('nextBtn').addEventListener('click', () => {
             document.getElementById('banner').style.display = 'none';
+            const prev = currentStop;
             currentStop = (currentStop + 1) % stops.length;
+            const wrapped = tripStarted && prev === stops.length - 1 && currentStop === 0;
             showStop(currentStop);
+            if (wrapped) showEndPopup(); else hideEndPopup();
+        });
+
+        // Start trip button: hide title card, show sidebar, and fly to Eugene (stop 0)
+        document.getElementById('startBtn').addEventListener('click', () => {
+            document.getElementById('banner').style.display = 'none';
+            document.getElementById('sidebar').style.display = 'block';
+            tripStarted = true;
+            currentStop = 0;
+            showStop(0, true);
         });
     </script>
   </body>
