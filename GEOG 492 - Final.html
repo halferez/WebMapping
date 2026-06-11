@@ -22,7 +22,7 @@
          
         .mapboxgl-popup-tip { display: none; }
         
-/*SIDEBAR*/
+/*Side bar where I can explain each stop*/
         #sidebar {
             position: absolute;
             top: 80px;
@@ -33,15 +33,15 @@
             padding: 15px;
             z-index: 999;
             font-family: "Ranchers", cursive;
-            font-weight: 300px;
-            display: none; /* hidden until trip starts */
+            font-weight: 200px;
+            display: none; /* makes it hidden until trip starts */
         }
         #sidebar h2 { margin: 0 0 8px; }
         #sidebar img { width: 100%; border-radius: 4px; }
-        #sidebar p { font-size: 0.85em; margin: 8px 0 0; }
+        #sidebar p { font-size: 2.0em; margin: 8px 0 0; }
         #sidebar .source { font-size: 0.6em; opacity: 0.6; margin-top: 4px; }
             
-/*FLY BUTTON*/
+/*next location button displayed as a big arrow*/
         .fly {
             position: absolute;
             top: 20px;
@@ -64,7 +64,7 @@
             transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
             z-index: 5001;
         }
-
+/*makes the next button change when hovered */
         .fly:hover {
             transform: scale(1.1);
             background: rgb(255, 235, 100);
@@ -72,12 +72,6 @@
         }
 
 /*BUTTONS*/
-        .ranchers-regular {
-            font-family: "Ranchers", sans-serif;
-            font-weight: 200;
-            font-style: normal;
-        }
-
         button {
             font-family: "Ranchers", cursive;
             font-weight: 400;
@@ -91,7 +85,7 @@
             font-style: normal;
         } 
 
-/*TITLE*/
+/*Title screen*/
         #banner { 
             position: absolute;
             inset: 0; /* full viewport overlay */
@@ -131,7 +125,7 @@
             font-size: 0.9em;
             margin: 4px 0;
         }
-/*END CARD*/
+/*End screen*/
         #endPopup {
             position: absolute;
             top: 0;
@@ -159,10 +153,10 @@
       
     </style>
   </head>
-  <body>
+  <body> 
     <div id='map'></div>
     <div id='banner'>
-        <div class="banner-card">
+        <div class="banner-card"> 
             <div style="font-size:1.4em;">GEOG 492 Final Project</div>
             <h1>EPIC&nbsp;&nbsp;&nbsp;END&nbsp;&nbsp;&nbsp;OF&nbsp;&nbsp;&nbsp;YEAR&nbsp;&nbsp;&nbsp;ROAD&nbsp;&nbsp;&nbsp;TRIP</h1>
             <h2>By: Haley Alferez</h2>
@@ -183,17 +177,18 @@
     </div>
 
     <script>
+//access token
         mapboxgl.accessToken = 'pk.eyJ1IjoiaGFsZmVyZXoiLCJhIjoiY21uaTFxOWJ3MDhjdjJxcHV0enlydnp6cSJ9.CoskwjDtnAWrKo5riK_sTg';
-
+// initalize the map
         var map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/halferez/cmpq06fjj002x01ss6e28181p',
             center: [-123.08968, 44.05212],
             zoom: 11
         });
-
+//plus minus zoom controls
         map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-left');
-        
+//red route line        
         map.on('style.load', () => {
             map.addSource('trace', {
                 type: 'geojson',
@@ -219,9 +214,8 @@
                 }
             });
 
-            // removed route fit here; we'll fit to stops after stops are defined
         });
-
+//defines the stops, thier location, and what the sidebar should be populated with
         const stops = [
             {
                 name: 'Eugene',
@@ -267,7 +261,7 @@
 
         let currentStop = 0;
         let tripStarted = false;
-
+//show the current stop and update the sidebar as well as the map location
         function showStop(index, fly = true) {
             const stop = stops[index];
 
@@ -283,7 +277,7 @@
             const btn = document.getElementById('nextBtn');
             btn.title = index >= stops.length - 1 ? 'Back to Start' : 'Next Location';
         }
-
+// Show the end popup when the trip is complete aka after all the stops have been clicked thorugh
         function showEndPopup() {
             const popup = document.getElementById('endPopup');
             popup.style.display = 'flex';
@@ -292,11 +286,11 @@
                 popup.style.display = 'none';
             }, 10000);
         }
-
+// hides the end popup after a set time or if the user clicks away
         function hideEndPopup() {
             document.getElementById('endPopup').style.display = 'none';
         }
-
+// fits the map to the bounds of all the stops
         function fitToStops() {
             try {
                 const coords = stops.map(s => s.center);
@@ -308,9 +302,9 @@
                 console.warn('Could not fit to stops:', e);
             }
         }
-
-        map.on('load', () => { /* show title card first; start button will fly to Eugene */ fitToStops(); });
-
+// Initialize the map when it loads
+        map.on('load', () => {fitToStops(); });
+//defines the next button that moves to the next stop
         document.getElementById('nextBtn').addEventListener('click', () => {
             document.getElementById('banner').style.display = 'none';
             const prev = currentStop;
@@ -320,7 +314,7 @@
             if (wrapped) showEndPopup(); else hideEndPopup();
         });
 
-        // Start trip button: hide title card, show sidebar, and fly to Eugene (stop 0)
+// Start trip button function to hide title card, show sidebar, and fly to Eugene (stop 0)
         document.getElementById('startBtn').addEventListener('click', () => {
             document.getElementById('banner').style.display = 'none';
             document.getElementById('sidebar').style.display = 'block';
